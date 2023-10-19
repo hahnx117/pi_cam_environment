@@ -72,7 +72,7 @@ def register_devices_using_discovery(mqtt_client):
         "state_topic": state_topic,
         "device_class": "temperature",
         "unit_of_measurement": "°C",
-        "value_template": "{{ value_json.payload.temperature | float | round(2) }}",
+        "value_template": "{{ value_json.payload.temperature | float | round(1) }}",
         "device": device_dict,
     }
 
@@ -110,6 +110,7 @@ def register_devices_using_discovery(mqtt_client):
         "unique_id": vis_ir_unique_id,
         "state_topic": state_topic,
         "device_class": "illuminance",
+        "unit_of_measurement": "lx",
         "value_template": "{{ value_json.payload.visible_plus_ir }}",
         "device": device_dict,
     }
@@ -119,6 +120,7 @@ def register_devices_using_discovery(mqtt_client):
         "unique_id": ir_unique_id,
         "state_topic": state_topic,
         "device_class": "illuminance",
+        "unit_of_measurement": "lx",
         "value_template": "{{ value_json.payload.infrared }}",
         "device": device_dict,
     }
@@ -128,6 +130,7 @@ def register_devices_using_discovery(mqtt_client):
         "unique_id": visible_unique_id,
         "state_topic": state_topic,
         "device_class": "illuminance",
+        "unit_of_measurement": "lx",
         "value_template": "{{ value_json.payload.visible_light }}",
         "device": device_dict,
     }
@@ -157,31 +160,31 @@ client.username_pw_set(mqtt_user, mqtt_password)
 client.connect(mqtt_host, int(mqtt_port))
 client.loop_start()
 
-while True:
-    register_devices_using_discovery(client)
+if __name__ == "__main__":
+    while True:
+        register_devices_using_discovery(client)
 
-    data_dict = {
-        "topic": state_topic,
-        "payload": {
-            "temperature": bmp.temperature,
-            "pressure": bmp.pressure,
-            "altitude": bmp.altitude,
-            "visible_plus_ir": ltr329.visible_plus_ir_light,
-            "infrared": ltr329.ir_light,
-            "visible_light": (ltr329.visible_plus_ir_light - ltr329.ir_light),
-            #"report_time": datetime.now().strftime("%a %B %d %H:%M"),
-            "report_time": datetime.datetime.now().isoformat(),
-        },
-        "status": "online",
-    }
+        data_dict = {
+            "topic": state_topic,
+            "payload": {
+                "temperature": bmp.temperature,
+                "pressure": bmp.pressure,
+                "altitude": bmp.altitude,
+                "visible_plus_ir": ltr329.visible_plus_ir_light,
+                "infrared": ltr329.ir_light,
+                "visible_light": (ltr329.visible_plus_ir_light - ltr329.ir_light),
+                "report_time": datetime.now().astimezone().isoformat(),
+            },
+            "status": "online",
+        }
 
-    sensor_payload = json.dumps(data_dict)
-    logging.info("sensor_payload:")
-    logging.info(sensor_payload)
+        sensor_payload = json.dumps(data_dict)
+        logging.info("sensor_payload:")
+        logging.info(sensor_payload)
 
-    client.publish(state_topic, sensor_payload, qos=1, retain=True)
+        client.publish(state_topic, sensor_payload, qos=1, retain=True)
 
-    data_dict = None
-    time.sleep(10)
+        data_dict = None
+        time.sleep(30)
 
 
