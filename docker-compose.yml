@@ -1,0 +1,9 @@
+version: "3"
+
+services:
+  pi_cam_env_sensors:
+    container_name: pi_cam_env_sensors
+    image: pi_cam_env_monitor:latest
+    env_file: .env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
