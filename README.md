@@ -1,5 +1,7 @@
 # pi_cam_environment
 
+First activate the I2C port in `raspi-config`
+
 ## Equipment
 + Raspberry Pi 4 2GB
 + Qwiic Hat
@@ -13,3 +15,4 @@
 + Raspberry Pi Cam 3 Wide
 
 NOTE: The `pip` packages should be in the Docker container anyway.
+
