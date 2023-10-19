@@ -48,11 +48,17 @@ def register_devices_using_discovery(mqtt_client):
     pressure_unique_id = f"{hostname}_pressure"
     altitude_unique_id = f"{hostname}_altitude"
     report_time_unique_id = f"{hostname}_report_time"
+    vis_ir_unique_id = f"{hostname}_vis_ir"
+    ir_unique_id = f"{hostname}_ir"
+    visible_unique_id = f"{hostname}_visible"
 
     temp_discovery_topic = f"{ha_discovery_root}/{temp_unique_id}/config"
     pressure_discovery_topic = f"{ha_discovery_root}/{pressure_unique_id}/config"
     alt_discovery_topic = f"{ha_discovery_root}/{altitude_unique_id}/config"
     report_time_discovery_topic = f"{ha_discovery_root}/{report_time_unique_id}/config"
+    vis_ir_discovery_topic = f"{ha_discovery_root}/{vis_ir_unique_id}/config"
+    ir_discovery_topic = f"{ha_discovery_root}/{ir_unique_id}/config"
+    visible_discovery_topic = f"{ha_discovery_root}/{visible_unique_id}/config"
 
     device_dict = {
         "identifiers": f"{hostname}_Raspi_Cam_and_Env_Sensors",
@@ -65,7 +71,7 @@ def register_devices_using_discovery(mqtt_client):
         "unique_id": temp_unique_id,
         "state_topic": state_topic,
         "device_class": "temperature",
-        "unit_of_measurement": "C",
+        "unit_of_measurement": "°C",
         "value_template": "{{ value_json.payload.temperature | float | round(2) }}",
         "device": device_dict,
     }
@@ -99,17 +105,50 @@ def register_devices_using_discovery(mqtt_client):
         "device": device_dict,
     }
 
+    vis_ir_config_object = {
+        "name": "Visible + IR Light",
+        "unique_id": vis_ir_unique_id,
+        "state_topic": state_topic,
+        "device_class": "illuminance",
+        "value_template": "{{ value_json.payload.visible_plus_ir }}",
+        "device": device_dict,
+    }
+
+    ir_config_object = {
+        "name": "IR Light",
+        "unique_id": ir_unique_id,
+        "state_topic": state_topic,
+        "device_class": "illuminance",
+        "value_template": "{{ value_json.payload.infrared }}",
+        "device": device_dict,
+    }
+
+    visible_config_object = {
+        "name": "Visible Light",
+        "unique_id": visible_unique_id,
+        "state_topic": state_topic,
+        "device_class": "illuminance",
+        "value_template": "{{ value_json.payload.visible_light }}",
+        "device": device_dict,
+    }
+
     logging.info("Discovery config objects:")
     logging.info(json.dumps(temp_config_object))
     logging.info(json.dumps(pressure_config_object))
     logging.info(json.dumps(altitude_config_object))
     logging.info(json.dumps(report_time_config_object))
+    logging.info(json.dumps(vis_ir_config_object))
+    logging.info(json.dumps(ir_config_object))
+    logging.info(json.dumps(visible_config_object))
 
     try:
         mqtt_client.publish(temp_discovery_topic, json.dumps(temp_config_object), qos=1, retain=True)
         mqtt_client.publish(pressure_discovery_topic, json.dumps(pressure_config_object), qos=1, retain=True)
         mqtt_client.publish(alt_discovery_topic, json.dumps(altitude_config_object), qos=1, retain=True)
         mqtt_client.publish(report_time_discovery_topic, json.dumps(report_time_config_object), qos=1, retain=True)
+        mqtt_client.publish(vis_ir_discovery_topic, json.dumps(vis_ir_config_object), qos=1, retain=True)
+        mqtt_client.publish(ir_discovery_topic, json.dumps(ir_config_object), qos=1, retain=True)
+        mqtt_client.publish(visible_discovery_topic, json.dumps(visible_config_object), qos=1, retain=True)
     except Exception as e:
         logging.error(e)
 
@@ -130,7 +169,8 @@ while True:
             "visible_plus_ir": ltr329.visible_plus_ir_light,
             "infrared": ltr329.ir_light,
             "visible_light": (ltr329.visible_plus_ir_light - ltr329.ir_light),
-            "report_time": datetime.now().strftime("%a %B %d %H:%M"),
+            #"report_time": datetime.now().strftime("%a %B %d %H:%M"),
+            "report_time": datetime.datetime.now().isoformat(),
         },
         "status": "online",
     }
