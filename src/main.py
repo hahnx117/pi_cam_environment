@@ -212,7 +212,10 @@ if __name__ == "__main__":
     while True:
         register_devices_using_discovery(client)
 
-        bmp.sea_level_pressure = get_slp_from_metar(airport)
+        sea_level_pressure = get_slp_from_metar(airport)
+        
+        if sea_level_pressure != "9999":
+            bmp.sea_level_pressure = sea_level_pressure
 
         data_dict = {
             "topic": state_topic,
