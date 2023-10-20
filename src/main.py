@@ -44,9 +44,11 @@ airport = "KMSP"
 def get_slp_from_metar(airport_code):
     metar_data_url = f"https://aviationweather.gov/cgi-bin/data/metar.php?ids={airport_code.upper()}&hours=0&order=id%2C-obs&sep=true"
     response = requests.get(metar_data_url)
+    logging.info(f"METAR URL Request: {response.status_code}")
     response.raise_for_status()
 
     metar_list = response.text.split()
+    logging.info(f"METAR Active Time: {metar_list[1]}")
 
     for i in metar_list:
         if "SLP" in i:
@@ -54,6 +56,8 @@ def get_slp_from_metar(airport_code):
                 alt_string = re.split(r'(\d+)', i)[1]
             except IndexError:
                 new_alt = "9999"
+        else:
+            new_alt = "9999"
 
     if int(alt_string[0]) >= 5:
         new_alt = f"9{alt_string}"
@@ -127,7 +131,7 @@ def register_devices_using_discovery(mqtt_client):
         "state_topic": state_topic,
         "device_class": "distance",
         "unit_of_measurement": "m",
-        "value_template": "{{ value_json.payload.altitude | float | round(1) }}",
+        "value_template": "{{ value_json.payload.altitude | int }}",
         "device": device_dict,
     }
 
@@ -171,12 +175,12 @@ def register_devices_using_discovery(mqtt_client):
     }
 
     surface_level_pressure_config_object = {
-        "name": "Pressure",
+        "name": "Surface Level Pressure",
         "unique_id": slp_unique_id,
         "state_topic": state_topic,
         "device_class": "atmospheric_pressure",
         "unit_of_measurement": "hPa",
-        "value_template": "{{ value_json.payload.pressure | float | round(2) }}",
+        "value_template": "{{ value_json.payload.slp | float | round(1) }}",
         "device": device_dict,
     }
 
@@ -222,7 +226,7 @@ if __name__ == "__main__":
             "payload": {
                 "temperature": bmp.temperature,
                 "pressure": bmp.pressure,
-                f"{airport.lower()}_slp": bmp.sea_level_pressure,
+                "slp": bmp.sea_level_pressure,
                 "altitude": bmp.altitude,
                 "visible_plus_ir": ltr329.visible_plus_ir_light,
                 "infrared": ltr329.ir_light,
